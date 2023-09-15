@@ -1,0 +1,97 @@
+version: "3"
+services:
+  postgresql:
+    image: postgres:15.0
+    container_name: postgresql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - web
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    networks:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.traefik.service=traefik"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+    command: --api.insecure=true --providers.docker
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ganggstand@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.localhost`)"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+    networks:
+      - web
+    restart: unless-stopped
+    depends_on:
+      - traefik
+      - postgresql
+  frontend:
+    build:
+      dockerfile: src/frontend/Dockerfile
+      context: .
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.frontend.rule=Host(`project.localhost`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    networks:
+      - web
+    depends_on:
+      - traefik
+      - backend
+  backend:
+    build:
+      dockerfile: src/backend/Dockerfile
+      context: .
+    command: >
+      sh -c "alembic upgrade head && uvicorn main:app --reload --host 0.0.0.0 --port 8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.backend.rule=Host(`project.localhost`) && PathPrefix(`/api/`) || Host(`project.localhost`) && PathPrefix(`/admin/`) || Host(`project.localhost`) && PathPrefix(`/media/`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+    networks:
+      - web
+    depends_on:
+      - traefik
+      - postgresql
+    environment:
+      DB_HOST: "postgresql"
+      DB_PORT: "5432"
+      DB_NAME: "support"
+      DB_USER: "postgres"
+      DB_PASS: "postgres"
+      SECRET: "SECRET"
+      BASE_URL: "http://project.localhost"
+      SMTP_HOST: "connect.smtp.bz"
+      SMTP_PORT: "465"
+      SMTP_PASSWORD: "9j0drwBK9wGW"
+      SMTP_USER: "info@kibtop.com"
+    volumes:
+      - media:/app/media/
+networks:
+  web:
+    external: true
+volumes:
+  media:

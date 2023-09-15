@@ -1,0 +1,13 @@
+**/venv
+**/.env.example
+**/Readme.md
+**/readme
+**/.vs
+**/.vscode
+**/.idea
+**/__pycache__
+**/media
+**/models
+**/.git
+libs/Dockerfile.one
+**/.env
