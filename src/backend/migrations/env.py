@@ -5,7 +5,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
 import auth.models
-import customers.models
+import event.models
 
 from database import Base
 
@@ -14,7 +14,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = [auth.models.metadata, customers.models.metadata,Base.metadata]
+target_metadata = [auth.models.metadata, event.models.metadata, Base.metadata]
 
 load_dotenv()
 

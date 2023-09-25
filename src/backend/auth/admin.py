@@ -1,4 +1,3 @@
-from typing import Optional
 from auth_settings import AuthJWT
 from sqladmin import ModelView
 from fastapi.responses import RedirectResponse
@@ -32,11 +31,11 @@ class AdminAuth(AuthenticationBackend):
         request.session.clear()
         return True
 
-    async def authenticate(self, request: Request) -> Optional[RedirectResponse]:
+    async def authenticate(self, request: Request) -> RedirectResponse | bool:
         token = request.session.get("token")
-
         if not token:
             return RedirectResponse(request.url_for("admin:login"), status_code=302)
+        return True
 
 
 class UserAdmin(ModelView, model=User):
@@ -60,7 +59,7 @@ class UserAdmin(ModelView, model=User):
     column_formatters = {User.roles: lambda m, a: [role.name for role in m.roles]}
     column_formatters_detail = {User.roles: lambda m, a: [role.name for role in m.roles]}
 
-    form_excluded_columns = [User.roles, User.hashed_password]
+    form_excluded_columns = [User.hashed_password, User.roles]
 
 
 class RoleAdmin(ModelView, model=Role):

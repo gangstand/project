@@ -2,7 +2,6 @@ version: "3"
 services:
   postgresql:
     image: postgres:15.0
-    container_name: postgresql
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -13,7 +12,6 @@ services:
       - "5432:5432"
   traefik:
     image: traefik:latest
-    container_name: traefik
     restart: unless-stopped
     networks:
       - web
@@ -31,7 +29,6 @@ services:
     command: --api.insecure=true --providers.docker
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ganggstand@gmail.com
       PGADMIN_DEFAULT_PASSWORD: postgres
